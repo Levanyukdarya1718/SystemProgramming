@@ -54,55 +54,65 @@ public:
 		cout << "Fuel level:\t" << fuel_level << "liters.\n";
 	}
 };
-#define MIN_ENGINE_CONSUMPTION	5
-#define MAX_ENGINE_CONSUMPTION	50
+#define MIN_ENGINE_CONSUMPTION	3
+#define MAX_ENGINE_CONSUMPTION	25
 class Engine
 {
-	double consumption_ls;
-	bool running;
-public:
 	const double CONSUMPTION;
+	const double DEFAULT_CONSUMPTION_PER_SECOND;
+	double consumption_per_second;
+	bool is_started;
+	
+public:
 
-	double get_consuption_ls()const
+	double get_consumption_per_second()const
 	{
-		return consumption_ls;
+		return consumption_per_second;
 	}
-	Engine(double consumption) :CONSUMPTION
-	(
-
-		consumption < MIN_ENGINE_CONSUMPTION ? MIN_ENGINE_CONSUMPTION :
-		consumption > MAX_ENGINE_CONSUMPTION ? MAX_ENGINE_CONSUMPTION :
-		consumption
-
-	), running(false)
+	Engine(double consumption) :
+		CONSUMPTION
+		(
+			consumption <MIN_ENGINE_CONSUMPTION ? MIN_ENGINE_CONSUMPTION :
+			consumption>MAX_ENGINE_CONSUMPTION ? MAX_ENGINE_CONSUMPTION :
+			consumption
+		),DEFAULT_CONSUMPTION_PER_SECOND(CONSUMPTION*3e-5),
+		consumption_per_second(DEFAULT_CONSUMPTION_PER_SECOND)
 	{
-		
-		consumption_ls = CONSUMPTION * 0.0003;
-		cout << "Engine is ready:" << endl;
+		cout << "Engine is ready" << endl;
 	}
 	~Engine()
 	{
-		cout << "Engine is over"  << endl;
+		cout << "Engine is over" << endl;
 	}
-	void engine_start()
+	void start()
 	{
-		running = true;
+		is_started = true;
 	}
-	void engine_stop()
+	void stop()
 	{
-		running = false;
+		is_started = false;
+	}
+	bool started()const
+	{
+		return is_started;
 	}
 	void info()const
 	{
-		cout << CONSUMPTION << " l/100km" << endl;
-		cout << consumption_ls << " l/s" << endl;
+		cout << "Consumption:" << CONSUMPTION << "liters/100km\n";
+		cout << "Consumption:" << DEFAULT_CONSUMPTION_PER_SECOND << "liters/s\n";
+		cout << "Consumption:" << consumption_per_second << "liters/s\n";
+
 	}
+	
+
 
 };
-
+//#define TANK_CHECK
+//#define ENGENE_CHECK
 void main()
 {
 	setlocale(LC_ALL, "");
+#ifdef TANK_CHECK
 	Tank tank(80);
 	tank.info();
 	Engine engine(10);
@@ -114,6 +124,13 @@ void main()
 		tank.fill(fuel);
 		tank.info();
 	} while (true);
+#endif // TANK_CHECK
+#ifdef ENGENE_CHECK
+	Engine engine(10);
+	engine.info();
+#endif // ENGINE_CHECK
+
+
 
 
 }

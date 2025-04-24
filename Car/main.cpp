@@ -1,7 +1,11 @@
 #include <Windows.h>
 #include <iostream>
 #include <conio.h>
+#include<thread>
 using namespace std;
+using std::cin;
+using std::cout;
+using std::endl;
 
 #define Enter 13
 #define Escape 27
@@ -120,6 +124,11 @@ class Car
 	int speed;
 	const int MAX_SPEED;
 	bool  driver_inside;
+	struct 
+	{
+		std::thread panel_thread;
+
+	}threads_container;//эта структура не имеет имени и реализует только один экземпл€р
 public:
 	Car(double consumption, int capacity, int max_speed = 250):
 		MAX_SPEED
@@ -142,20 +151,17 @@ public:
 	void get_in()
 	{
 		driver_inside = true;
-		panel();
+		threads_container.panel_thread = std::thread(&Car::panel, this);
+		//panel();
 	}
 	void get_out()
 	{
 		driver_inside = false;
-	}
-	void panel()
-	{
+		if (threads_container.panel_thread.joinable())threads_container.panel_thread.join();
 		system("CLS");
-		cout << "Fuel level:" << tank.get_fuel_level() << "liters\n";
-		cout << "Engine is" << (engine.started() ? "started" : "stopped") << endl;
-		cout << "Speed:\t" << speed << "km/h\n";
-		Sleep(100);
+		cout << "You are out of the car" << endl;
 	}
+
 	void control()
 	{
 		char key=0;
@@ -167,10 +173,25 @@ public:
 			case Enter:
 				driver_inside ? get_out() : get_in();
 				break;
+			case'F':case'f':
+				double fuel;
+				cout << "¬ведите объем топлива:"; cin >> fuel;
+				tank.fill(fuel);
+			case Escape:
+				get_out();
 			}
 		} while (key!=Escape);
 
 	}
+	void panel()
+	{
+		system("CLS");
+		cout << "Fuel level:" << tank.get_fuel_level() << "liters\n";
+		cout << "Engine is" << (engine.started() ? "started" : "stopped") << endl;
+		cout << "Speed:\t" << speed << "km/h\n";
+		Sleep(100);
+	}
+	//Concurent execution (одновременное выполнение)
 	void info()const
 	{
 		engine.info();

@@ -22,12 +22,12 @@ public:
 	{
 		return fuel_level;
 	}
-	Tank(int  capacity):CAPACITY
-		(
-		capacity < MIN_TANK_CAPACITY ? MIN_TANK_CAPACITY:
-		capacity > MAX_TANK_CAPACITY ? MAX_TANK_CAPACITY:
+	Tank(int  capacity) :CAPACITY
+	(
+		capacity < MIN_TANK_CAPACITY ? MIN_TANK_CAPACITY :
+		capacity > MAX_TANK_CAPACITY ? MAX_TANK_CAPACITY :
 		capacity
-		)
+	)
 	{
 		if (capacity < MIN_TANK_CAPACITY)cout << "Min capacity was applied" << endl;
 		if (capacity > MAX_TANK_CAPACITY)cout << "Max capacity was applied " << endl;
@@ -59,7 +59,7 @@ public:
 	}
 	void info()const
 	{
-		cout << "Capacity:\t" << CAPACITY<<"liters/\n";
+		cout << "Capacity:\t" << CAPACITY << "liters/\n";
 		cout << "Fuel level:\t" << fuel_level << "liters.\n";
 	}
 };
@@ -71,7 +71,7 @@ class Engine
 	const double DEFAULT_CONSUMPTION_PER_SECOND;
 	double consumption_per_second;
 	bool is_started;
-	
+
 public:
 
 	double get_consumption_per_second()const
@@ -84,7 +84,7 @@ public:
 			consumption <MIN_ENGINE_CONSUMPTION ? MIN_ENGINE_CONSUMPTION :
 			consumption>MAX_ENGINE_CONSUMPTION ? MAX_ENGINE_CONSUMPTION :
 			consumption
-		),DEFAULT_CONSUMPTION_PER_SECOND(CONSUMPTION*3e-5),
+		), DEFAULT_CONSUMPTION_PER_SECOND(CONSUMPTION * 3e-5),
 		consumption_per_second(DEFAULT_CONSUMPTION_PER_SECOND)
 	{
 		is_started = false;
@@ -124,18 +124,18 @@ class Car
 	int speed;
 	const int MAX_SPEED;
 	bool  driver_inside;
-	struct 
+	struct
 	{
 		std::thread panel_thread;
 		std::thread engine_idle_thread;
 
 	}threads_container;//эта структура не имеет имени и реализует только один экземпл€р
 public:
-	Car(double consumption, int capacity, int max_speed = 250):
+	Car(double consumption, int capacity, int max_speed = 250) :
 		MAX_SPEED
 		(
-			max_speed<MAX_SPEED_LOWER_LIMIT?MAX_SPEED_LOWER_LIMIT:
-			max_speed >MAX_SPEED_HIGHER_LIMIT?MAX_SPEED_HIGHER_LIMIT:
+			max_speed<MAX_SPEED_LOWER_LIMIT ? MAX_SPEED_LOWER_LIMIT :
+			max_speed >MAX_SPEED_HIGHER_LIMIT ? MAX_SPEED_HIGHER_LIMIT :
 			max_speed
 		),
 		engine(consumption),
@@ -180,10 +180,11 @@ public:
 
 	void control()
 	{
-		char key=0;
+		char key = 0;
 		do
 		{
-			key = _getch();
+			key = 0;
+			if (_kbhit())key = _getch();
 			switch (key)
 			{
 			case Enter:
@@ -199,9 +200,12 @@ public:
 					!engine.started() ? start() : stop();
 				break;
 			case Escape:
+				stop();
 				get_out();
+
 			}
-		} while (key!=Escape);
+			if (tank.get_fuel_level() <= 0)stop();
+		} while (key != Escape);
 
 	}
 	void engine_idle()
@@ -213,11 +217,22 @@ public:
 	}
 	void panel()
 	{
-		system("CLS");
-		cout << "Fuel level:" << tank.get_fuel_level() << " liters\n";
-		cout << "Engine is " << (engine.started() ? "started" : "stopped") << endl;
-		cout << "Speed:\t" << speed << "km/h\n";
-		Sleep(100);
+		while (driver_inside)
+		{
+			system("CLS");
+			cout << "Fuel level:" << tank.get_fuel_level() << " liters\n";
+			if (tank.get_fuel_level() < 5)
+			{
+				HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+				SetConsoleTextAttribute(hConsole, 0xCF);
+				cout << "LOW FUEL";
+				SetConsoleTextAttribute(hConsole, 0x07);
+			}
+			cout << endl;
+			cout << "Engine is " << (engine.started() ? "started" : "stopped") << endl;
+			cout << "Speed:\t" << speed << "km/h\n";
+			Sleep(100);
+		}
 	}
 	//Concurent execution (одновременное выполнение)
 	void info()const

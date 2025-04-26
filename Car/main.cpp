@@ -6,6 +6,7 @@ using namespace std;
 using std::cin;
 using std::cout;
 using std::endl;
+using namespace std::chrono_literals;
 
 #define Enter 13
 #define Escape 27
@@ -57,7 +58,6 @@ public:
 		return fuel_level;
 	}
 	void info()const
-
 	{
 		cout << "Capacity:\t" << CAPACITY<<"liters/\n";
 		cout << "Fuel level:\t" << fuel_level << "liters.\n";
@@ -127,6 +127,7 @@ class Car
 	struct 
 	{
 		std::thread panel_thread;
+		std::thread engine_idle_thread;
 
 	}threads_container;//эта структура не имеет имени и реализует только один экземпл€р
 public:
@@ -161,6 +162,21 @@ public:
 		system("CLS");
 		cout << "You are out of the car" << endl;
 	}
+	void start()
+	{
+		double fuel_level = tank.get_fuel_level();
+		if (fuel_level)
+		{
+			engine.start();
+			threads_container.engine_idle_thread = std::thread(&Car::engine_idle, this);
+		}
+	}
+	void stop()
+	{
+		engine.stop();
+		if (threads_container.engine_idle_thread.joinable())
+			threads_container.engine_idle_thread.join();
+	}
 
 	void control()
 	{
@@ -177,17 +193,29 @@ public:
 				double fuel;
 				cout << "¬ведите объем топлива:"; cin >> fuel;
 				tank.fill(fuel);
+				break;
+			case 'I': case'i':
+				if (driver_inside)
+					!engine.started() ? start() : stop();
+				break;
 			case Escape:
 				get_out();
 			}
 		} while (key!=Escape);
 
 	}
+	void engine_idle()
+	{
+		while (engine.started() && tank.give_fuel(engine.get_consumption_per_second()))
+		{
+			std::this_thread::sleep_for(1s);
+		}
+	}
 	void panel()
 	{
 		system("CLS");
-		cout << "Fuel level:" << tank.get_fuel_level() << "liters\n";
-		cout << "Engine is" << (engine.started() ? "started" : "stopped") << endl;
+		cout << "Fuel level:" << tank.get_fuel_level() << " liters\n";
+		cout << "Engine is " << (engine.started() ? "started" : "stopped") << endl;
 		cout << "Speed:\t" << speed << "km/h\n";
 		Sleep(100);
 	}
